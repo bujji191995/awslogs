@@ -6,34 +6,126 @@ var ipcRenderer = require('electron').ipcRenderer;
 
 
 
-var metricTypes = {'s3':[{name:"M 1", val:"m1"}] , 'lam':[]};
+var metricTypes = {'s3':[{val:"AR", name:"All Requests"},{val:"GR", name:"Get Requests"}] , 'lam':[{val:"inv", name:"Invocations"}]};
 
+var uCount = ["AR","inv"];
+var mSec = [];
+var byt = [];
+var sStat = ["AR","inv"];
+var stats = ["Average","All","Sum"];
 
 
 ipcRenderer.on('init-metricsdata', function(event) {
 
             // Metric Drop down change
-
+            $("#includedLoader").hide();
             $("#chsrvc").change(function () {
                 $('#metric').empty();
+                $('#metric').append("<option value='none'>Chose a value</option>");
                 for(var i=0; i<metricTypes[$(this).val()].length; i++){
                     var op = metricTypes[$(this).val()];
-                    $('#metric').apend("<option value='"+op[i].val+"'>"+op[i].name+"</option>");
+                    $('#metric').append("<option value='"+op[i].val+"'>"+op[i].name+"</option>");
+                }
+            });
+
+            $("#metric").change(function(){
+                console.log($(this).val())
+              if(uCount.indexOf($(this).val()) > -1)
+              {
+                 var mUnit = "Count";
+                 if(sStat.indexOf($(this).val())> -1)
+                 {
+                 stats = [];
+                 stats.push("Sum");
+                 }
+                 for(var i=0; i<stats.length; i++){
+                
+                    $('#stat').append("<option value='"+stats[i]+"'>"+stats[i]+"</option>");
+                }
+                
+              }
+            });
+
+              $("#submitmetrics").click(function()
+              {
+                $("#includedLoader").show();
+                if($('#chsrvc').val() == 'S3')
+                {
+               
+                var params = {
+                    Dimensions: [
+                      {
+                        Name: 'BucketName',
+                        Value: 'praveen' /* required */
+                      },
+
+                      {
+                        Name: 'FilterId',
+                        Value: 'EntireBucket' /* required */
+                      }
+                    ],
+                    MetricName: $('#metrics').val(),
+                    Namespace: 'AWS/S3',
+                    statistics : stats,
+                    unit: 'Count',
+                    startTime:getdate2Timestamp(new Date('01-01-2019 01:00')),
+                    endTime:getdate2Timestamp(new Date('01-04-2019 01:00'))
+                  };
+                  
+                  cw.listMetrics(params, function(err, data) {
+                    $("#includedLoader").hide();
+                    if (err) {
+                      console.log("Error", err);
+                    } else {
+                      console.log("Metrics", JSON.stringify(data.Metrics));
+                    }
+                  });
+
                 }
 
-                
-                
-                if ($(this).val() == "s3")
-                {
+                else{
+                    $("#includedLoader").show();
+                    var AWS = require('aws-sdk');
+                    var credentials = {accessKeyId:"AKIAI3SLJSMYWVDUKLNA", secretAccessKey:'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'};
+                    var region = "us-east-2"
+                    AWS.config.credentials = credentials;
+                    AWS.config.region = region;
+                    var cw = new AWS.CloudWatch()
                     
+                   
+
+                    var params = {
+                        Dimensions: [
+                          {
+                            Name: 'FunctionName',
+                            Value: 'LambdaRequest1' /* required */
+                          },
+    
+ 
+                        ],
+                        MetricName: $('#metrics').val(),
+                        Namespace: 'AWS/Lambda',
+                       /* statistics : stats,
+                        unit: 'Count',
+                        startTime:getdate2Timestamp(new Date('01-01-2019 01:00')),
+                        endTime:getdate2Timestamp(new Date('01-04-2019 01:00'))*/
+                      };
+                      
+                      cw.listMetrics(params, function(err, data) {
+                        $("#includedLoader").hide();
+                        if (err) {
+                          console.log("Error", err);
+                        } else {
+                          console.log("Metrics", JSON.stringify(data.Metrics));
+                        }
+                      });
                 }
-                alert($('#startTime').val());
-                alert($('#endTime').val());
-                currGroup = 0;
-                currStream = 0;
-                logs = [];
-                getData(logGroups[currGroup].name, {groupName:logGroups[currGroup].name, streamName:logGroups[currGroup].streams[currStream].logStreamName});
-            });
+
+              });
+
+              
+ 
+              
 
 })
 ipcRenderer.on('init-data', function (event) {

@@ -76,147 +76,7 @@
     </div>
   </nav>
 
-  <div class="container" style="margin-top: 60px; max-height: 1000px; padding-top: 20px;">
-    <div class="row">
-      <div class="col-12" style="height: 780px;">
-        <div class="card">
-          <div class="card-header">
-            Invocations/Duration/Memory
-
-        <div class="modal1" id="myModal1">
-          <div class="modal1-dialog">
-            <div class="modal1-content">
-            <!-- Modal Header -->
-        <div class="modal1-header">
-          <h4 class="modal1-title">Range Selection</h4>
-         <!-- <button type="button" class="close" data-dismiss="modal">&times;</button>-->
-        </div>
-        <!-- Modal body -->
-        <div class="modal1-body">
-          <form>
-            <div class="form-group">
-              <label for="startTime">Start Date</label>
-              <input type="datetime-local" class="form-control" id="startTime">
-              <label for="endTime">End Date</label>
-              <input type="datetime-local" class="form-control" id="endTime">
-            </div>
-          </form>
-        </div>
-
-        <!-- Modal footer -->
-        <div class="modal1-footer">
-          <button id="submitBtn" type="submit" data-dismiss="modal1" class="btn btn-success">Submit</button>
-          <button type="button" class="btn btn-danger" data-dismiss="modal1" title="Close">Close</button>
-        </div>
-      </div>
-    </div>
-  </div>
-            <span class="pull-right" style="display: inline"><form action="" >
-              
-                <div class="radio" style="display: inline">
-                  <label><input class="timeRadio" type="radio" name="optradio" value="hour" checked>Granularity-Hour</label>
-                </div>
-                <div class="radio" style="display: inline">
-                  <label><input class="timeRadio" type="radio" value="minute" name="optradio">Granularity-Minutes</label>
-                </div>
-            </form></span>
-            <!---<input id="timestampbtn" type="button" form = "form1" name="timestampbtn" data-dismiss="modal" class="btn btn-success" value="Submit"/>-->
-          </div>
-          <div class="card-body">
-            <div id="timeChart" width="400" height="400"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-12">
-        <div class="card">
-          <div class="card-header">Invocations/Duration/Memory per Lambda
-            <span id="lambdaListHeader" class="pull-right" style="display: inline">
-
-
-          </span>
-          </div>
-
-          <div class="card-body">
-            <canvas id="lambdaChart" width="400" height="400"></canvas>
-          </div>
-        </div>
-      </div>
-    </div>
- 
-    
-    <div class="col-12" style="height: 480px;">
-      <div class="card">
-        <div class="card-header" style="text-align:center"> Duration Vs Billed Duration
-          <span id="lambdaListHeader" class="pull-right" style="display: inline">
-            <i class="fa fa-caret-square-o-down" style="font-size:24px"></i>
-            </span>
-        </div>
-        <div class="card-body">
-          <div id="durchart" width="400px" height="400px"></div>
-        </div>
-        <div id="exportCsvBtnContainer1" class="card-footer">
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12" style="height: 480px;">
-      <div class="card">
-        <div class="card-header" style="text-align:center"> Memory Used Vs MaxMemory
-          <span id="lambdaListHeader" class="pull-right" style="display: inline">
-            <i class="fa fa-caret-square-o-down" style="font-size:24px"></i>
-            </span>
-        </div>
-        <div class="card-body">
-          <div id="memchart" width="400px" height="400px"></div>
-        </div>
-        <div id="exportCsvBtnContainer" class="card-footer">
-        </div>
-      </div>
-    </div>
-
-
-
-
-
-    <div class="modal fade" id="dataTableModal" role="dialog">
-      <div class="modal-dialog modal-lg" style="min-width: 1080px">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h4 class="modal-title">Log Events Data</h4>
-
-            <button type="button" class="close" data-dismiss="modal">&times;</button>
-
-          </div>
-          <div class="modal-body" id="dataTableContainer">
-
-            <table id="dataTable" class="table table-striped" style="max-height: 400px; overflow-y: scroll; font-size: 10px;">
-              <!--<thead>
-              <tr>
-                <th>Firstname</th>
-                <th>Lastname</th>
-                <th>Email</th>
-              </tr>
-              </thead>-->
-
-              <thead>
-
-              </thead>
-              <tbody>
-
-              </tbody>
-            </table>
-          </div>
-          <div class="modal-footer">
-            <button class="btn btn-success" id="btn-export">Export</button>
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
- 
+   
     <script>
       // You can also require other files to run in this process
       require('./dashborad.js')
@@ -239,10 +99,10 @@
         <div class="modal-body">
           <form>
             <div class="form-group">
-              <label for="accss">Choose Service</label>
+              <label for="chsrvc">Choose Service</label>
               <select id="chsrvc" class="form-control" id="chsrvc">
                 <option value ="s3">S3 Bucket</option>
-                <option value ="lambda">Lambda Name</option>
+                <option value ="lam">Lambda Name</option>
               </select>
             </div>
             <div class="form-group">
@@ -251,19 +111,16 @@
               </select>
             </div>
             <div class="form-group">
-              <label for="scrt">SecretKeyID</label>
-              <input type="text" class="form-control" id="scrt">
+              <label for="stat">Sttistics</label>
+              <select id="stat" class="form-control" id="stat">
+              </select>
             </div>
-            <div class="form-group">
-              <label for="rgn">AWS Region</label>
-              <input type="text" class="form-control" id="rgn">
-            </div>
-          </form>
+                </form>
         </div>
 
         <!-- Modal footer -->
         <div class="modal-footer">
-          <button id="saveawsBtn" type="submit" data-dismiss="modal" class="btn btn-success">Save</button>
+          <button id="submitmetrics" type="submit" data-dismiss="modal" class="btn btn-success">Save</button>
           <button type="button" class="btn btn-danger" data-dismiss="modal" title="Close">Close</button>
         </div>
 
@@ -271,44 +128,7 @@
     </div>
   </div>
 
-  <!--- Comparison -->
-
-  <div class="modal" id="testcmp">
-    <div class="modal-dialog">
-      <div class="modal-content">
-
-        <!-- Modal Header -->
-        <div class="modal-header">
-          <h4 class="modal-title">Add AWS Credentials</h4>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
-
-        <!-- Modal body -->
-        <div class="modal-body">
-          <form>
-            <div class="form-group">
-              <label for="accss">AccessKeyID</label>
-              <input type="text" class="form-control" id="accss">
-            </div>
-            <div class="form-group">
-              <label for="scrt">SecretKeyID</label>
-              <input type="text" class="form-control" id="scrt">
-            </div>
-            <div class="form-group">
-              <label for="rgn">AWS Region</label>
-              <input type="text" class="form-control" id="rgn">
-            </div>
-          </form>
-        </div>
-
-        <!-- Modal footer -->
-        <div class="modal-footer">
-          <button id="saveawsBtn" type="submit" data-dismiss="modal" class="btn btn-success">Save</button>
-          <button type="button" class="btn btn-danger" data-dismiss="modal" title="Close">Close</button>
-        </div>
-
       </div>
-    </div>
   </div>
   </body>
 </html>

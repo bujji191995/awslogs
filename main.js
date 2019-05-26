@@ -14,7 +14,8 @@ function createWindow () {
   mainWindow = new BrowserWindow({width: 800, height: 600})
 
   // and load the index.html of the app.
-  mainWindow.loadFile('dashboard.html')
+  //mainWindow.loadFile('dashboard.html')
+  mainWindow.loadFile('awsmetrics.html')
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
@@ -24,7 +25,7 @@ function createWindow () {
   mainWindow.webContents.openDevTools();
   mainWindow.webContents.on('did-finish-load', () => {
         if(page2load == "home"){
-            mainWindow.webContents.send('init-data');
+            mainWindow.webContents.send('init-metricsdata');
             mainWindow.webContents.send('updatedLogGroup',logGroups);
         }else{
           mainWindow.webContents.send('init-data',currGroup);
@@ -133,7 +134,7 @@ function createaws (){
 AWS.config.credentials = credentials;
 AWS.config.region = region;
 cloudwatchlogs= new AWS.CloudWatchLogs();
-awsmetrics = new Amazon.CloudWatch.awsmetrics();
+//awsmetrics = new Amazon.CloudWatch.awsmetrics();
 
 }
 
