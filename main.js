@@ -14,8 +14,8 @@ function createWindow () {
   mainWindow = new BrowserWindow({width: 800, height: 600})
 
   // and load the index.html of the app.
-  //mainWindow.loadFile('dashboard.html')
-  mainWindow.loadFile('awsmetrics.html')
+  mainWindow.loadFile('dashboard.html')
+  //mainWindow.loadFile('awsmetrics.html')
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
@@ -25,7 +25,7 @@ function createWindow () {
   mainWindow.webContents.openDevTools();
   mainWindow.webContents.on('did-finish-load', () => {
         if(page2load == "home"){
-            mainWindow.webContents.send('init-metricsdata');
+            mainWindow.webContents.send('init-data');
             mainWindow.webContents.send('updatedLogGroup',logGroups);
         }else{
           mainWindow.webContents.send('init-data',currGroup);
@@ -127,13 +127,13 @@ function checkLambdaExist(name) {
 
 
 var AWS = require('aws-sdk');
-var credentials = {accessKeyId:"AKIAI3SLJSMYWVDUKLNA", secretAccessKey:'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'};
+var credentials = {accessKeyId:"AKIAJLI3MJ5HIYRPBJFA", secretAccessKey:'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'};
 var region = "us-east-2"
 var cloudwatchlogs;
 function createaws (){
 AWS.config.credentials = credentials;
 AWS.config.region = region;
-cloudwatchlogs= new AWS.CloudWatchLogs();
+cloudwatchlogs = new AWS.CloudWatchLogs();
 //awsmetrics = new Amazon.CloudWatch.awsmetrics();
 
 }
@@ -147,7 +147,9 @@ function getLogStreamsForLogGroups(logGroup) {
         logGroupName: logGroup.name, /* required */
         descending: true
     };
+    console.log(credentials);
     cloudwatchlogs.describeLogStreams(params, function(err, data) {
+       console.log("on Response"); // an error occurred
         if (err){
             console.log(err, err.stack); // an error occurred
         }else{
@@ -156,7 +158,7 @@ function getLogStreamsForLogGroups(logGroup) {
         }
         currGroup++;
         if(!logGroups[currGroup]){
-            mainWindow.webContents.send('updatedLogGroup',logGroups);
+           mainWindow.webContents.send('updatedLogGroup',logGroups);
         }else{
             getLogStreamsForLogGroups(logGroups[currGroup]);
         }
@@ -166,10 +168,9 @@ function getLogStreamsForLogGroups(logGroup) {
 
 function loadData() {
     currGroup = 0;
-    if(logGroups.length == 0){
-        mainWindow.webContents.send('updatedLogGroup',logGroups);
-    }else{
-        getLogStreamsForLogGroups(logGroups[currGroup]);
+    if(logGroups.length > 0){
+       // mainWindow.webContents.send('updatedLogGroup',logGroups);
+       getLogStreamsForLogGroups(logGroups[currGroup]);
     }
 }
 

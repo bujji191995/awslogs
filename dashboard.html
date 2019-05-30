@@ -77,42 +77,55 @@
     </div>
   </nav>
 
+  
+
+  
+
   <div class="container" style="margin-top: 60px; max-height: 1000px; padding-top: 20px;">
     <div class="row">
-      <div class="col-12" style="height: 780px;">
-        <div class="card">
-          <div class="card-header">
-            Invocations/Duration/Memory
 
-        <div class="modal1" id="myModal1">
-          <div class="modal1-dialog">
-            <div class="modal1-content">
-            <!-- Modal Header -->
-        <div class="modal1-header">
-          <h4 class="modal1-title">Range Selection</h4>
-         <!-- <button type="button" class="close" data-dismiss="modal">&times;</button>-->
-        </div>
-        <!-- Modal body -->
-        <div class="modal1-body">
-          <form>
-            <div class="form-group">
-              <label for="startTime">Start Date</label>
-              <input type="datetime-local" class="form-control" id="startTime">
-              <label for="endTime">End Date</label>
-              <input type="datetime-local" class="form-control" id="endTime">
+      <div class="col-12"  style="margin-bottom: 10px;">
+      <div class="card">
+        
+        <div class="card-body">
+          <div class="modal1" id="myModal1">
+            <div class="modal1-dialog">
+              <div class="modal1-content">
+              <!-- Modal Header -->
+              <div class="modal1-header">
+                <h4 class="modal1-title">Range Selection</h4>
+               <!-- <button type="button" class="close" data-dismiss="modal">&times;</button>-->
+              </div>
+              <!-- Modal body -->
+              <div class="modal1-body">
+                <form>
+                  <div class="form-group">
+                    <label for="startTime">Start Date</label>
+                    <input type="datetime-local" class="form-control" id="startTime">
+                    <label for="endTime">End Date</label>
+                    <input type="datetime-local" class="form-control" id="endTime">
+                  </div>
+                </form>
+              </div>
+
+              <!-- Modal footer -->
+              <div class="modal1-footer">
+                <button id="submitBtn" type="submit" data-dismiss="modal1" class="btn btn-success">Submit</button>
+                <button type="button" class="btn btn-danger" data-dismiss="modal1" title="Close">Close</button>
+              </div>
             </div>
-          </form>
+          </div>
         </div>
-
-        <!-- Modal footer -->
-        <div class="modal1-footer">
-          <button id="submitBtn" type="submit" data-dismiss="modal1" class="btn btn-success">Submit</button>
-          <button type="button" class="btn btn-danger" data-dismiss="modal1" title="Close">Close</button>
         </div>
       </div>
     </div>
-  </div>
-            <span class="pull-right" style="display: inline"><form action="" >
+
+      
+      <div class="col-12" style="margin-bottom: 10px;">
+        <div class="card">
+          <div class="card-header">
+            Invocations/Duration/Memory
+                <span class="pull-right" style="display: inline"><form action="" >
               
                 <div class="radio" style="display: inline">
                   <label><input class="timeRadio" type="radio" name="optradio" value="hour" checked>Granularity-Hour</label>
@@ -124,44 +137,39 @@
             <!---<input id="timestampbtn" type="button" form = "form1" name="timestampbtn" data-dismiss="modal" class="btn btn-success" value="Submit"/>-->
           </div>
           <div class="card-body">
-            <div id="timeChart" width="400" height="400"></div>
+            <div id="timeChart" style="width:100%;height:400px"></div>
           </div>
         </div>
       </div>
 
-      <div class="col-12">
+      <div class="col-12" style="margin-bottom: 10px;">
         <div class="card">
           <div class="card-header">Invocations/Duration/Memory per Lambda
             <span id="lambdaListHeader" class="pull-right" style="display: inline">
-
-
           </span>
           </div>
 
           <div class="card-body">
-            <canvas id="lambdaChart" width="400" height="400"></canvas>
+            <canvas id="lambdaChart" style="width:100%;height:400px"></canvas>
           </div>
         </div>
       </div>
-    </div>
- 
-    
-    <div class="col-12" style="height: 480px;">
+
+    <div class="col-12" style="margin-bottom: 10px;">
       <div class="card">
-        <div class="card-header" style="text-align:center"> Duration Vs Billed Duration
+        <div class="card-header" style="text-align:center">Duration Vs Billed Duration
           <span id="lambdaListHeader" class="pull-right" style="display: inline">
             <i class="fa fa-caret-square-o-down" style="font-size:24px"></i>
-            </span>
+          </span>
         </div>
         <div class="card-body">
-          <div id="durchart" width="400px" height="400px"></div>
-        </div>
-        <div id="exportCsvBtnContainer1" class="card-footer">
+          <div id="durchart" style="width:100%;height:400px"></div>
+           <div id="exportCsvBtnContainer1" class="card-footer" style="text-align: center;"></div>
         </div>
       </div>
     </div>
 
-    <div class="col-12" style="height: 480px;">
+    <div class="col-12"  style="margin-bottom: 10px;">
       <div class="card">
         <div class="card-header" style="text-align:center"> Memory Used Vs MaxMemory
           <span id="lambdaListHeader" class="pull-right" style="display: inline">
@@ -169,17 +177,12 @@
             </span>
         </div>
         <div class="card-body">
-          <div id="memchart" width="400px" height="400px"></div>
+          <div id="memchart" style="width:100%;height:400px"></div>
         </div>
         <div id="exportCsvBtnContainer" class="card-footer">
         </div>
       </div>
     </div>
-
-
-
-
-
     <div class="modal fade" id="dataTableModal" role="dialog">
       <div class="modal-dialog modal-lg" style="min-width: 1080px">
         <div class="modal-content">
@@ -192,14 +195,6 @@
           <div class="modal-body" id="dataTableContainer">
 
             <table id="dataTable" class="table table-striped" style="max-height: 400px; overflow-y: scroll; font-size: 10px;">
-              <!--<thead>
-              <tr>
-                <th>Firstname</th>
-                <th>Lastname</th>
-                <th>Email</th>
-              </tr>
-              </thead>-->
-
               <thead>
 
               </thead>
@@ -216,12 +211,12 @@
       </div>
     </div>
   </div>
+</div>
 
- 
-    <script>
-      // You can also require other files to run in this process
-      require('./dashborad.js')
-    </script>
+  <script>
+    // You can also require other files to run in this process
+    require('./dashborad.js')
+  </script>
 <!-- Lambda Name Enter-->
 
   <div class="modal" id="myModal">

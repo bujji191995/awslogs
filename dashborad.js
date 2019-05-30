@@ -4,19 +4,13 @@
 
 var ipcRenderer = require('electron').ipcRenderer;
 
-
-
 var metricTypes = {'s3':[{val:"AR", name:"All Requests"},{val:"GR", name:"Get Requests"}] , 'lam':[{val:"inv", name:"Invocations"}]};
-
 var uCount = ["AR","inv"];
 var mSec = [];
 var byt = [];
 var sStat = ["AR","inv"];
 var stats = ["Average","All","Sum"];
-
-
 ipcRenderer.on('init-metricsdata', function(event) {
-
             // Metric Drop down change
             $("#includedLoader").hide();
             $("#chsrvc").change(function () {
@@ -86,7 +80,8 @@ ipcRenderer.on('init-metricsdata', function(event) {
                 else{
                     $("#includedLoader").show();
                     var AWS = require('aws-sdk');
-                    var credentials = {accessKeyId:"AKIAI3SLJSMYWVDUKLNA", secretAccessKey:'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'};
+                    //var credentials = {accessKeyId:"AKIAI3SLJSMYWVDUKLNA", secretAccessKey:'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'};
+                    var credentials = {accessKeyId:"AKIAJLI3MJ5HIYRPBJFA", secretAccessKey:'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'};
                     var region = "us-east-2"
                     AWS.config.credentials = credentials;
                     AWS.config.region = region;
@@ -122,11 +117,6 @@ ipcRenderer.on('init-metricsdata', function(event) {
                 }
 
               });
-
-              
- 
-              
-
 })
 ipcRenderer.on('init-data', function (event) {
 
@@ -144,40 +134,34 @@ ipcRenderer.on('init-data', function (event) {
 
     $("#saveawsBtn").click(function () {
         var accsskey = $("#accss").val();
-
         var scrtkey = $("#scrt").val();
-
         var rgn = $("#rgn").val();
        // ipcRenderer.send('addLogGroup',{groupName:logGroups[lgId].name, streamName:logGroups[lgId].streams[streamId].logStreamName})
        credentials.accessKeyId = accsskey;
        credentials.secretAccessKey = scrtkey;
        region = rgn;
-
        createaws();
-       
        ipcRenderer.send('addcred',{accsskey:accsskey,scrtkey:scrtkey,rgn:rgn});
-
         $("#includedLoader").show();
     })
 
     ipcRenderer.on('updatedLogGroup', function (event, data) {
         logGroups = data;
-        if(logGroups.length > 0){
+        if(logGroups.length > 0 && logGroups[currGroup].streams[currStream] && logGroups.length > 0){
             $("#includedLoader").show();
             getData(logGroups[currGroup].name, {groupName:logGroups[currGroup].name, streamName:logGroups[currGroup].streams[currStream].logStreamName});
         }else{
             $("#includedLoader").hide();
         }
-        
         $(".timeRadio").click(function () {
             if(timeType == $(this).val()){
                 return;
             }
             timeType = $(this).val();
-             currGroup = 0;
-             currStream = 0;
-             logs = [];
-             getData(logGroups[currGroup].name, {groupName:logGroups[currGroup].name, streamName:logGroups[currGroup].streams[currStream].logStreamName});
+            currGroup = 0;
+            currStream = 0;
+            logs = [];
+            getData(logGroups[currGroup].name, {groupName:logGroups[currGroup].name, streamName:logGroups[currGroup].streams[currStream].logStreamName});
         });
 
 
@@ -187,8 +171,6 @@ ipcRenderer.on('init-data', function (event) {
             currStream = 0;
             logs = [];
             getData(logGroups[currGroup].name, {groupName:logGroups[currGroup].name, streamName:logGroups[currGroup].streams[currStream].logStreamName});
-
-       
         });
 
 
@@ -207,11 +189,7 @@ ipcRenderer.on('init-data', function (event) {
         alert(message);
 
     })
-    
-    
-
 //{name:"/aws/lambda/LambdaRequest1", displayName:"Lambda Request1",streams:[]},
-
 
 });
 
@@ -221,7 +199,8 @@ var logGroups = [
 
 
 var AWS = require('aws-sdk');
-var credentials = {accessKeyId:"AKIAI3SLJSMYWVDUKLNA", secretAccessKey:'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'};
+//var credentials = {accessKeyId:"AKIAI3SLJSMYWVDUKLNA", secretAccessKey:'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'};
+var credentials = {accessKeyId:"AKIAJLI3MJ5HIYRPBJFA", secretAccessKey:'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'};
 var region = "us-east-2"
 AWS.config.credentials = credentials;
 AWS.config.region = region;
