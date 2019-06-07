@@ -80,8 +80,8 @@ ipcRenderer.on('init-metricsdata', function(event) {
                 else{
                     $("#includedLoader").show();
                     var AWS = require('aws-sdk');
-                    //var credentials = {accessKeyId:"AKIAI3SLJSMYWVDUKLNA", secretAccessKey:'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'};
-                    var credentials = {accessKeyId:"AKIAJLI3MJ5HIYRPBJFA", secretAccessKey:'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'};
+                    //var credentials = {accessKeyId:"accessKeyId", secretAccessKey:'secretAccessKey'};
+                    var credentials = {accessKeyId:"accessKeyId", secretAccessKey:'secretAccessKey'};
                     var region = "us-east-2"
                     AWS.config.credentials = credentials;
                     AWS.config.region = region;
@@ -126,6 +126,7 @@ ipcRenderer.on('init-data', function (event) {
        // ipcRenderer.send('addLogGroup',{groupName:logGroups[lgId].name, streamName:logGroups[lgId].streams[streamId].logStreamName})
        
        ipcRenderer.send('addLogGroup',lName);
+        $("#lambda").val("");
 
         $("#includedLoader").show();
     })
@@ -147,6 +148,21 @@ ipcRenderer.on('init-data', function (event) {
 
     ipcRenderer.on('updatedLogGroup', function (event, data) {
         logGroups = data;
+        $("#lambdaList").empty();
+        for(var i=0; i<logGroups.length; i++){
+            $("#lambdaList").append('<li style="padding: 0" class="list-group-item"><a style="float:left; height: 63px; width: 100px; display: none; padding: 0; border-radius: 0; line-height: 63px;" class="btn btn-danger delete-confirm"><i class="fa fa-times"></i></a><div style="margin: 20px">'+logGroups[i].displayName+'<a class="deleteLambda pull-right danger"><i class="fa fa-trash" aria-hidden="true"></i></a></div></li>');
+        }
+
+        $(".deleteLambda").click(function () {
+            var cdBtn = $(this).parent().parent().find(".delete-confirm");
+            cdBtn.animate({width:"toggle"});
+            cdBtn.click(function () {
+                $(this).parent().animate({height:0},300, function () {
+                    $(this).remove();
+                });
+            })
+        })
+
         if(logGroups.length > 0 && logGroups[currGroup].streams[currStream] && logGroups.length > 0){
             $("#includedLoader").show();
             getData(logGroups[currGroup].name, {groupName:logGroups[currGroup].name, streamName:logGroups[currGroup].streams[currStream].logStreamName});
@@ -199,8 +215,8 @@ var logGroups = [
 
 
 var AWS = require('aws-sdk');
-//var credentials = {accessKeyId:"AKIAI3SLJSMYWVDUKLNA", secretAccessKey:'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'};
-var credentials = {accessKeyId:"AKIAJLI3MJ5HIYRPBJFA", secretAccessKey:'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'};
+//var credentials = {accessKeyId:"accessKeyId", secretAccessKey:'secretAccessKey'};
+var credentials = {accessKeyId:"accessKeyId", secretAccessKey:'secretAccessKey'};
 var region = "us-east-2"
 AWS.config.credentials = credentials;
 AWS.config.region = region;
@@ -233,7 +249,7 @@ function getData(lambda ,data) {
             console.log(err.stack);
             return;
         }
-        console.log(data.events);
+        console.log(JSON.stringify(data));
         // New addition
         if(data.events.length > 0){
             dataFound = true;

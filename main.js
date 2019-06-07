@@ -99,6 +99,7 @@ ipcMain.on('addLogGroup', (event, groupName) => {
         return;
     }
     logGroups.push({name:"/aws/lambda/"+groupName, displayName:groupName,streams:[]});
+
     loadData();
 
     
@@ -126,8 +127,8 @@ function checkLambdaExist(name) {
 
 
 
-var AWS = require('aws-sdk');
-var credentials = {accessKeyId:"AKIAJLI3MJ5HIYRPBJFA", secretAccessKey:'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'};
+var AWS = require('aws-sdk');   
+var credentials = {accessKeyId:"accessKeyId", secretAccessKey:'secretAccessKey'};
 var region = "us-east-2"
 var cloudwatchlogs;
 function createaws (){
@@ -153,7 +154,7 @@ function getLogStreamsForLogGroups(logGroup) {
         if (err){
             console.log(err, err.stack); // an error occurred
         }else{
-            console.log(data.logStreams);           // successful response
+            console.log(JSON.stringify(data));           // successful response
             logGroup.streams = data.logStreams;
         }
         currGroup++;
