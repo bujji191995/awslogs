@@ -1,7 +1,14 @@
 // Modules to control application life and create native browser window
 // ipc main = register events, trigger events
 const {app, BrowserWindow, ipcMain} = require('electron')
-require('electron-reload')(__dirname);
+const path = require('path')
+require('electron-reload')(__dirname, {
+    electron: path.join(__dirname, 'node_modules', 'data', 'electron'),
+    hardResetMethod: 'exit',
+    ignored: /data|[\/\\]\./,
+    argv: []
+});
+var fs = require('fs');
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -24,9 +31,13 @@ function createWindow () {
   mainWindow.on('closed',onMainWindowClose )
   mainWindow.webContents.openDevTools();
   mainWindow.webContents.on('did-finish-load', () => {
+        console.log("init in main")
         if(page2load == "home"){
             mainWindow.webContents.send('init-data');
-            mainWindow.webContents.send('updatedLogGroup',logGroups);
+            mainWindow.webContents.send('updatedCredentials',{credentials:credentials,  region:region});
+            mainWindow.webContents.send('updatedLogGroupList',logGroups);
+            //mainWindow.webContents.send('updatedLogGroup',logGroups);
+            loadData();
         }else{
           mainWindow.webContents.send('init-data',currGroup);
         }
@@ -67,7 +78,34 @@ function onMainWindowClose() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
+app.on('ready', loadStorageData)
+
+
+function loadStorageData() {
+
+    fs.readFile('data/globalSettings.json', 'utf8', function readFileCallback(err, data){
+        if (err){
+            console.log(err);
+        } else {
+            credentials = JSON.parse(data).credentials; //now it an object
+            region = JSON.parse(data).region; //now it an object
+            console.log(credentials, region)
+            createaws();
+        }
+        fs.readFile('data/logGroups.json', 'utf8', function readFileCallback(err, data){
+            if (err){
+                console.log(err);
+            } else {
+                logGroups = JSON.parse(data); //now it an object
+            }
+            createWindow();
+        });
+    });
+
+
+}
+
+
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
@@ -92,24 +130,45 @@ app.on('activate', function () {
 
 
 ipcMain.on('addLogGroup', (event, groupName) => {
-
     if(checkLambdaExist(groupName)){
         console.log();
         mainWindow.webContents.send('showAlert',"Lambda already exist!");
         return;
     }
     logGroups.push({name:"/aws/lambda/"+groupName, displayName:groupName,streams:[]});
-
-    loadData();
-
-    
+    fs.writeFile('data/logGroups.json', JSON.stringify(logGroups), 'utf8', function (err) {
+        console.log("err :",err);
+    });
+    //loadData();
+    mainWindow.webContents.send('updatedLogGroupList',logGroups);
 });
+
+
+ipcMain.on('removeLogGroup', (event, groupName) => {
+    var group2Remove = false;
+    for(var i =0; i<logGroups.length; i++){
+        if(logGroups[i].name == groupName){
+            logGroups.splice(i, 1);
+            group2Remove = true;
+            break;
+        }
+    }
+    if(group2Remove){
+        fs.writeFile('data/logGroups.json', JSON.stringify(logGroups), 'utf8', function (err) {
+            console.log("err :",err);
+        });
+    }
+    return;
+})
 
 ipcMain.on('addcred', (event, creds) => {
 
     credentials.accessKeyId = creds.accsskey;
     credentials.secretAccessKey = creds.scrtkey;
     region = creds.rgn;
+    fs.writeFile('data/globalSettings.json', JSON.stringify({credentials:credentials,region:region}), 'utf8', function (err) {
+        console.log("err :",err);
+    });
     createaws();
     
 });
@@ -132,11 +191,10 @@ var credentials = {accessKeyId:"accessKeyId", secretAccessKey:'secretAccessKey'}
 var region = "us-east-2"
 var cloudwatchlogs;
 function createaws (){
-AWS.config.credentials = credentials;
-AWS.config.region = region;
-cloudwatchlogs = new AWS.CloudWatchLogs();
-//awsmetrics = new Amazon.CloudWatch.awsmetrics();
-
+    AWS.config.credentials = credentials;
+    AWS.config.region = region;
+    cloudwatchlogs = new AWS.CloudWatchLogs();
+    //awsmetrics = new Amazon.CloudWatch.awsmetrics();
 }
 
 createaws();
@@ -159,6 +217,7 @@ function getLogStreamsForLogGroups(logGroup) {
         }
         currGroup++;
         if(!logGroups[currGroup]){
+           mainWindow.webContents.send('updatedCredentials',{credentials:credentials,  region:region});
            mainWindow.webContents.send('updatedLogGroup',logGroups);
         }else{
             getLogStreamsForLogGroups(logGroups[currGroup]);

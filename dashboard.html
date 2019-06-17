@@ -70,6 +70,13 @@
         })
 
 
+
+
+
+        $(".chartType").hide();
+        $("#Invocations_Duration_Memory").show();
+
+
       })
 
       function openNav() {
@@ -126,6 +133,11 @@
       @media screen and (max-height: 450px) {
         .sidenav {padding-top: 15px;}
         .sidenav a {font-size: 18px;}
+      }
+
+      .chartType{
+        width: 100%;
+        display: block;
       }
 
 
@@ -225,14 +237,14 @@
                     <input class="form-control" type="text" id="lambdaName" style="margin: 0 10px 0 10px" placeholder="Enter Lambda Name">
                   </div>
                   <div class="col-1" style="padding: 0">
-                    <button class="btn btn-success"><i class="fa fa-check" aria-hidden="true"></i></button>
+                    <button id="saveLambdaNameBtn" class="btn btn-success"><i class="fa fa-check" aria-hidden="true"></i></button>
                   </div>
                   <div class="col-2">
                     <button id="closeLambdaForm" class="btn btn-danger"><i class="fa fa-times" aria-hidden="true"></i></button>
                   </div>
                 </div>
 
-                <ul class="list-group list-group-flush" id="lambdaList">
+                <ul class="list-group list-group-flush" id="lambdaList" style="max-height: 200px; overflow: auto">
 
                 </ul>
               </div>
@@ -313,27 +325,44 @@
       </div>
     </div>-->
     <div class="row">
-      <div class="col-12" style="margin-bottom: 10px;">
-        <div class="card">
-          <div class="card-header">
-            Invocations/Duration/Memory
-            <!---<input id="timestampbtn" type="button" form = "form1" name="timestampbtn" data-dismiss="modal" class="btn btn-success" value="Submit"/>-->
-          </div>
-          <div class="card-body">
-            <div id="timeChart" style="width:100%;height:400px"></div>
-          </div>
-        </div>
+      <div class="col-12" style="margin-bottom: 10px; height: 100%">
+        <select id="chartType">
+          <option value="Invocations_Duration_Memory">Invocations/Duration/Memory</option>
+         <!-- <option value="Invocations/Duration/Memory">Invocations/Duration/Memory per Lambda</option>-->
+          <option value="Duration_Vs_Billed_Duration">Duration Vs Billed Duration</option>
+          <option value="Memory_Used_Vs_MaxMemory">Memory Used Vs MaxMemory</option>
+        </select>
+        <!-- <div class="card-header">Invocations/Duration/Memory</div>-->
+
+       <!-- <canvas id="lambdaChart" style="width:100%;height:400px"></canvas>-->
+        <span style="display: block; width: 100%; height: 100%; margin-top: 40px;">
+          <span class="chartType" id="Invocations_Duration_Memory">
+          <div id="timeChart" style="width:100%;height:600px"></div>
+          <div id="exportCsvBtnContainer2" class="card-footer" style="text-align: center;"></div>
+          </span>
+
+          <span class="chartType" id="Duration_Vs_Billed_Duration">
+            <div id="durchart" style="width:100%;height:600px"></div>
+            <div id="exportCsvBtnContainer1" class="card-footer" style="text-align: center;"></div>
+          </span>
+
+          <span class="chartType" id="Memory_Used_Vs_MaxMemory">
+            <div id="memchart" style="width:100%;height:600px"></div>
+            <div id="exportCsvBtnContainer" class="card-footer" style="text-align: center;"></div>
+          </span>
+        </span>
+
       </div>
 
-      <div class="col-12" style="margin-bottom: 10px;">
+
+      <!--<div class="col-12" style="margin-bottom: 10px;">
         <div class="card">
           <div class="card-header">Invocations/Duration/Memory per Lambda
             <span id="lambdaListHeader" class="pull-right" style="display: inline">
           </span>
           </div>
-
           <div class="card-body">
-            <canvas id="lambdaChart" style="width:100%;height:400px"></canvas>
+
           </div>
         </div>
       </div>
@@ -365,7 +394,11 @@
         <div id="exportCsvBtnContainer" class="card-footer">
         </div>
       </div>
-    </div>
+    </div>-->
+
+
+
+
     <div class="modal fade" id="dataTableModal" role="dialog">
       <div class="modal-dialog modal-lg" style="min-width: 1080px">
         <div class="modal-content">

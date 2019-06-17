@@ -1,7 +1,7 @@
 // This file is required by the index.html file and will
 // be executed in the renderer process for that window.
 // All of the Node.js APIs are available in this process.
-
+var fs = require('fs');
 var ipcRenderer = require('electron').ipcRenderer;
 
 var metricTypes = {'s3':[{val:"AR", name:"All Requests"},{val:"GR", name:"Get Requests"}] , 'lam':[{val:"inv", name:"Invocations"}]};
@@ -119,20 +119,27 @@ ipcRenderer.on('init-metricsdata', function(event) {
               });
 })
 ipcRenderer.on('init-data', function (event) {
-
     // aws lambda input
+    console.log("init  data:");
+    fs.readFile('data/globalSettings.json', 'utf8', function readFileCallback(err, data){
+        if (err){
+            console.log(err);
+        } else {
+            credentials = JSON.parse(data).credentials; //now it an object
+            region = JSON.parse(data).region; //now it an object
+        }
+    });
+
     $("#saveLambdaBtn").click(function () {
-        var lName = $("#lambda").val();
-       // ipcRenderer.send('addLogGroup',{groupName:logGroups[lgId].name, streamName:logGroups[lgId].streams[streamId].logStreamName})
-       
-       ipcRenderer.send('addLogGroup',lName);
-        $("#lambda").val("");
 
-        $("#includedLoader").show();
     })
-
+    $("#saveLambdaNameBtn").click(function () {
+        var lName = $("#lambdaName").val();
+        ipcRenderer.send('addLogGroup',lName);
+        $("#lambdaName").val("");
+        $("#lnContainer").animate({height: "toggle", padding:"toggle"});
+    })
     // aws credential enter
-
     $("#saveawsBtn").click(function () {
         var accsskey = $("#accss").val();
         var scrtkey = $("#scrt").val();
@@ -141,29 +148,49 @@ ipcRenderer.on('init-data', function (event) {
        credentials.accessKeyId = accsskey;
        credentials.secretAccessKey = scrtkey;
        region = rgn;
-       createaws();
+       //createaws();
        ipcRenderer.send('addcred',{accsskey:accsskey,scrtkey:scrtkey,rgn:rgn});
-        $("#includedLoader").show();
+       //$("#includedLoader").show();
     })
-
-    ipcRenderer.on('updatedLogGroup', function (event, data) {
+    ipcRenderer.on('updatedLogGroupList', function (event, data) {
         logGroups = data;
+        logGroups.reverse();
         $("#lambdaList").empty();
         for(var i=0; i<logGroups.length; i++){
-            $("#lambdaList").append('<li style="padding: 0" class="list-group-item"><a style="float:left; height: 63px; width: 100px; display: none; padding: 0; border-radius: 0; line-height: 63px;" class="btn btn-danger delete-confirm"><i class="fa fa-times"></i></a><div style="margin: 20px">'+logGroups[i].displayName+'<a class="deleteLambda pull-right danger"><i class="fa fa-trash" aria-hidden="true"></i></a></div></li>');
+            $("#lambdaList").append('<li style="padding: 0" data-l-name="'+logGroups[i].name+'" class="list-group-item"><a style="float:left; height: 63px; width: 100px; display: none; padding: 0; border-radius: 0; line-height: 63px;" class="btn btn-danger delete-confirm"><i class="fa fa-times"></i></a><div style="margin: 20px">'+logGroups[i].displayName+'<a class="deleteLambda pull-right danger"><i class="fa fa-trash" aria-hidden="true"></i></a></div></li>');
         }
-
         $(".deleteLambda").click(function () {
             var cdBtn = $(this).parent().parent().find(".delete-confirm");
             cdBtn.animate({width:"toggle"});
             cdBtn.click(function () {
+                var lName = $(this).parent().data('lName');
+                // alert(lName);
                 $(this).parent().animate({height:0},300, function () {
                     $(this).remove();
+                    ipcRenderer.send('removeLogGroup',lName);
                 });
             })
         })
+    });
 
-        if(logGroups.length > 0 && logGroups[currGroup].streams[currStream] && logGroups.length > 0){
+    ipcRenderer.on('updatedCredentials', function (event, data) {
+        credentials = data.credentials;
+        region = data.region;
+        $("#accss").val(credentials.accessKeyId);
+        $("#scrt").val(credentials.secretAccessKey);
+        $("#rgn").val(region);
+
+        AWS.config.credentials = credentials;
+        AWS.config.region = region;
+        cloudwatchlogs = new AWS.CloudWatchLogs();
+    });
+
+
+    ipcRenderer.on('updatedLogGroup', function (event, data) {
+        logGroups = data;
+       // alert("---"+logGroups.length)
+       // alert("-22--"+logGroups[currGroup].streams[currStream])
+        if(logGroups.length > 0 && logGroups[currGroup].streams[currStream]){
             $("#includedLoader").show();
             getData(logGroups[currGroup].name, {groupName:logGroups[currGroup].name, streamName:logGroups[currGroup].streams[currStream].logStreamName});
         }else{
@@ -203,10 +230,14 @@ ipcRenderer.on('init-data', function (event) {
     ipcRenderer.on('showAlert', function (event, message) {
         $("#includedLoader").hide();
         alert(message);
+    })
+
+    $("#chartType").change(function () {
+        var selVal =  $(this).val();
+        $(".chartType").hide();
+        $("#"+selVal).show();
 
     })
-//{name:"/aws/lambda/LambdaRequest1", displayName:"Lambda Request1",streams:[]},
-
 });
 
 var logGroups = [
@@ -216,7 +247,7 @@ var logGroups = [
 
 var AWS = require('aws-sdk');
 //var credentials = {accessKeyId:"accessKeyId", secretAccessKey:'secretAccessKey'};
-var credentials = {accessKeyId:"accessKeyId", secretAccessKey:'secretAccessKey'};
+var credentials = {accessKeyId:"AKIAIKAQBWLUFasaKKJQ4XA", secretAccessKey:'6hsGzMmhCyR1PX7TeaajVu+QuF3zV2BD1+tBir5gqu'};
 var region = "us-east-2"
 AWS.config.credentials = credentials;
 AWS.config.region = region;
@@ -227,159 +258,155 @@ var currStream = 0;
 var dataFound = false;
 var timestore = [];
 function getData(lambda ,data) {
-   /*
+    AWS.config.credentials = credentials;
     if(!credentials || !region || region ==""){
-
         console.log("Please enter the AWS credentials");
         return;
     }
-    */
     $("#includedLoader").show();
     var lambdatemp = lambda;
     console.log("lambda name:"+lambda);
     cloudwatchlogs.getLogEvents({logGroupName:data.groupName,logStreamName:data.streamName,
         startTime:getdate2Timestamp(new Date($('#startTime').val())),
         endTime:getdate2Timestamp(new Date($('#endTime').val()))}, function(err, data) {
-        
             console.log("group name:"+data);
             //console.log("stream name:"+data.streamName);
-
-        $("#includedLoader").hide();
-        if(err){
-            console.log(err.stack);
-            return;
-        }
-        console.log(JSON.stringify(data));
-        // New addition
-        if(data.events.length > 0){
-            dataFound = true;
-        }
-
-        for(i=0; i<data.events.length; i++) {
-            var event = data.events[i];
-            console.log(event.message);
-            var message = event.message;
-            if(message.indexOf("START") > -1){
-                //START RequestId: 0d0c0074-e53a-491c-89c8-4c5f96b7d306 Version: $LATEST
-                var reqId = message.split("RequestId:")[1];
-                reqId = reqId.split(" Version:")[0];
-                reqId = reqId.trim();
-                if(!logs[reqId]){
-                    logs[reqId] = {RequestId:reqId, lambdaName:lambda};
-                }
-                logs[reqId]["startTime"] = event.timestamp;
-                logs['invocations'] = logs['invocations']?logs['invocations']:[];
-                var tKey = timestamp2date(event.timestamp);
-                logs['invocations'][tKey] = logs['invocations'][tKey]?logs['invocations'][tKey]:{};
-                logs['invocations'][tKey]['reqs'] = logs['invocations'][tKey]['reqs']?logs['invocations'][tKey]['reqs']:[];
-                logs['invocations'][tKey]['reqs'].push(reqId);
-
-                logs[lambda] = logs[lambda]?logs[lambda]:[];
-                logs[lambda]['invocations'] = logs[lambda]['invocations']?logs[lambda]['invocations']:0;
-                logs[lambda]['invocations'] = logs[lambda]['invocations']+1;
-
-
-            }else if(message.indexOf("END") > -1){
-                reqId = message.split("RequestId:")[1];
-                reqId = reqId.trim();
-                //reqId = reqId.split("Version:")[0];
-                if(!logs[reqId]){
-                    logs[reqId] = {RequestId:reqId};
-                }
-                logs[reqId]["endTime"] = event.timestamp;
-            }else if(message.indexOf("REPORT") > -1){
-
-                reqId = message.split("RequestId:")[1];
-                reqId = reqId.split("Duration:")[0];
-                reqId = reqId.trim();
-                if(!logs[reqId]){
-                    logs[reqId] = {RequestId:reqId};
-                }
-                var duration = message.split("Duration:")[1];
-                duration = duration.split("Billed")[0];
-                duration = duration.split(" ms")[0];
-                logs[reqId]['duration'] = duration;
-
-                var billedDuration = message.split("Billed Duration:")[1];
-                billedDuration = billedDuration.split("Memory Size:")[0];
-                billedDuration = billedDuration.split(" ms")[0];
-                logs[reqId]['billedDuration'] = billedDuration;
-
-                var memorySize = message.split("Memory Size:")[1];
-                memorySize = memorySize.split("Max Memory Used:")[0];
-                memorySize = memorySize.split(" MB")[0];
-                logs[reqId]['memorySize'] = memorySize;
-
-                var maxMemoryUsed = message.split("Max Memory Used:")[1];
-                maxMemoryUsed = maxMemoryUsed.split(" MB")[0];
-                logs[reqId]['maxMemoryUsed'] = maxMemoryUsed;
-
-                logs[lambda] = logs[lambda]?logs[lambda]:[];
-                logs[lambda]['duration'] = logs[lambda]['duration']?logs[lambda]['duration']:0;
-                logs[lambda]['duration'] = logs[lambda]['duration']+Number(duration);
-
-                logs[lambda]['memoryUsed'] = logs[lambda]['memoryUsed']?logs[lambda]['memoryUsed']:0;
-                logs[lambda]['memoryUsed'] = logs[lambda]['memoryUsed']+Number(maxMemoryUsed);
-
-                for(var key in logs['invocations']){
-                   var reqs = logs['invocations'][key]['reqs'];
-                   if(reqs.indexOf(reqId) > -1){
-                       logs['invocations'][key]['duration'] = logs['invocations'][key]['duration']?logs['invocations'][key]['duration']:0;
-                       logs['invocations'][key]['duration'] = logs['invocations'][key]['duration']+Number(duration);
-
-                       logs['invocations'][key]['memoryUsed'] = logs['invocations'][key]['memoryUsed']?logs['invocations'][key]['memoryUsed']:0;
-                       logs['invocations'][key]['memoryUsed'] = logs['invocations'][key]['memoryUsed']+Number(maxMemoryUsed);
-
-                      
-                       logs['invocations'][key]['maxmemory'] = logs['invocations'][key]['maxmemory']?logs['invocations'][key]['maxmemory']:0;
-                       logs['invocations'][key]['maxmemory'] = logs['invocations'][key]['maxmemory']+Number(memorySize);
-
-                      
-                       break;
-                   }
-                }
-
-                /// new grahs //////////////////////
-
-                for(var key in logs['invocations']){
-                    var reqs = logs['invocations'][key]['reqs'];
-                    if(reqs.indexOf(reqId) > -1){
-                        logs['invocations'][key]['duration1'] = logs['invocations'][key]['duration1']?logs['invocations'][key]['duration1']:0;
-                        logs['invocations'][key]['duration1'] = logs['invocations'][key]['duration1']+Number(duration);
- 
-                        logs['invocations'][key]['billedDuration1'] = logs['invocations'][key]['billedDuration1']?logs['invocations'][key]['billedDuration1']:0;
-                        logs['invocations'][key]['billedDuration1'] = logs['invocations'][key]['billedDuration1']+Number(billedDuration);
- 
-                       
-                       
-                       
-                        break;
-                    }
-                 }
+            $("#includedLoader").hide();
+            if(err){
+                console.log(err.stack);
+                return;
+            }
+            console.log(JSON.stringify(data));
+            // New addition
+            if(data.events.length > 0){
+                dataFound = true;
             }
 
-        }
-        console.log(logs);
+            for(i=0; i<data.events.length; i++) {
+                var event = data.events[i];
+                console.log(event.message);
+                var message = event.message;
+                if(message.indexOf("START") > -1){
+                    //START RequestId: 0d0c0074-e53a-491c-89c8-4c5f96b7d306 Version: $LATEST
+                    var reqId = message.split("RequestId:")[1];
+                    reqId = reqId.split(" Version:")[0];
+                    reqId = reqId.trim();
+                    if(!logs[reqId]){
+                        logs[reqId] = {RequestId:reqId, lambdaName:lambda};
+                    }
+                    logs[reqId]["startTime"] = event.timestamp;
+                    logs['invocations'] = logs['invocations']?logs['invocations']:[];
+                    var tKey = timestamp2date(event.timestamp);
+                    logs['invocations'][tKey] = logs['invocations'][tKey]?logs['invocations'][tKey]:{};
+                    logs['invocations'][tKey]['reqs'] = logs['invocations'][tKey]['reqs']?logs['invocations'][tKey]['reqs']:[];
+                    logs['invocations'][tKey]['reqs'].push(reqId);
 
-        timestore[startTime] = logs;
-        currStream++;
-        if(logGroups[currGroup] && logGroups[currGroup].streams.length > currStream){
-            getData(logGroups[currGroup].name, {groupName:logGroups[currGroup].name, streamName:logGroups[currGroup].streams[currStream].logStreamName});
-        }else{
-            currStream = 0;
-            currGroup++;
-            if(logGroups.length > currGroup && logGroups[currGroup].streams && logGroups[currGroup].streams.length > 0){
+                    logs[lambda] = logs[lambda]?logs[lambda]:[];
+                    logs[lambda]['invocations'] = logs[lambda]['invocations']?logs[lambda]['invocations']:0;
+                    logs[lambda]['invocations'] = logs[lambda]['invocations']+1;
+
+
+                }else if(message.indexOf("END") > -1){
+                    reqId = message.split("RequestId:")[1];
+                    reqId = reqId.trim();
+                    //reqId = reqId.split("Version:")[0];
+                    if(!logs[reqId]){
+                        logs[reqId] = {RequestId:reqId};
+                    }
+                    logs[reqId]["endTime"] = event.timestamp;
+                }else if(message.indexOf("REPORT") > -1){
+
+                    reqId = message.split("RequestId:")[1];
+                    reqId = reqId.split("Duration:")[0];
+                    reqId = reqId.trim();
+                    if(!logs[reqId]){
+                        logs[reqId] = {RequestId:reqId};
+                    }
+                    var duration = message.split("Duration:")[1];
+                    duration = duration.split("Billed")[0];
+                    duration = duration.split(" ms")[0];
+                    logs[reqId]['duration'] = duration;
+
+                    var billedDuration = message.split("Billed Duration:")[1];
+                    billedDuration = billedDuration.split("Memory Size:")[0];
+                    billedDuration = billedDuration.split(" ms")[0];
+                    logs[reqId]['billedDuration'] = billedDuration;
+
+                    var memorySize = message.split("Memory Size:")[1];
+                    memorySize = memorySize.split("Max Memory Used:")[0];
+                    memorySize = memorySize.split(" MB")[0];
+                    logs[reqId]['memorySize'] = memorySize;
+
+                    var maxMemoryUsed = message.split("Max Memory Used:")[1];
+                    maxMemoryUsed = maxMemoryUsed.split(" MB")[0];
+                    logs[reqId]['maxMemoryUsed'] = maxMemoryUsed;
+
+                    logs[lambda] = logs[lambda]?logs[lambda]:[];
+                    logs[lambda]['duration'] = logs[lambda]['duration']?logs[lambda]['duration']:0;
+                    logs[lambda]['duration'] = logs[lambda]['duration']+Number(duration);
+
+                    logs[lambda]['memoryUsed'] = logs[lambda]['memoryUsed']?logs[lambda]['memoryUsed']:0;
+                    logs[lambda]['memoryUsed'] = logs[lambda]['memoryUsed']+Number(maxMemoryUsed);
+
+                    for(var key in logs['invocations']){
+                       var reqs = logs['invocations'][key]['reqs'];
+                       if(reqs.indexOf(reqId) > -1){
+                           logs['invocations'][key]['duration'] = logs['invocations'][key]['duration']?logs['invocations'][key]['duration']:0;
+                           logs['invocations'][key]['duration'] = logs['invocations'][key]['duration']+Number(duration);
+
+                           logs['invocations'][key]['memoryUsed'] = logs['invocations'][key]['memoryUsed']?logs['invocations'][key]['memoryUsed']:0;
+                           logs['invocations'][key]['memoryUsed'] = logs['invocations'][key]['memoryUsed']+Number(maxMemoryUsed);
+
+
+                           logs['invocations'][key]['maxmemory'] = logs['invocations'][key]['maxmemory']?logs['invocations'][key]['maxmemory']:0;
+                           logs['invocations'][key]['maxmemory'] = logs['invocations'][key]['maxmemory']+Number(memorySize);
+
+
+                           break;
+                       }
+                    }
+
+                    /// new grahs //////////////////////
+
+                    for(var key in logs['invocations']){
+                        var reqs = logs['invocations'][key]['reqs'];
+                        if(reqs.indexOf(reqId) > -1){
+                            logs['invocations'][key]['duration1'] = logs['invocations'][key]['duration1']?logs['invocations'][key]['duration1']:0;
+                            logs['invocations'][key]['duration1'] = logs['invocations'][key]['duration1']+Number(duration);
+
+                            logs['invocations'][key]['billedDuration1'] = logs['invocations'][key]['billedDuration1']?logs['invocations'][key]['billedDuration1']:0;
+                            logs['invocations'][key]['billedDuration1'] = logs['invocations'][key]['billedDuration1']+Number(billedDuration);
+
+
+
+
+                            break;
+                        }
+                     }
+                }
+
+            }
+            console.log("Logs : "+logs);
+
+            timestore[startTime] = logs;
+            currStream++;
+            if(logGroups[currGroup] && logGroups[currGroup].streams.length > currStream){
                 getData(logGroups[currGroup].name, {groupName:logGroups[currGroup].name, streamName:logGroups[currGroup].streams[currStream].logStreamName});
             }else{
-                if(!dataFound){
-                    alert("Data not found!");
-
+                currStream = 0;
+                currGroup++;
+                if(logGroups.length > currGroup && logGroups[currGroup].streams && logGroups[currGroup].streams.length > 0){
+                    getData(logGroups[currGroup].name, {groupName:logGroups[currGroup].name, streamName:logGroups[currGroup].streams[currStream].logStreamName});
                 }else{
-                    populateUI();
-                }
+                    if(!dataFound){
+                        alert("Data not found!");
 
+                    }else{
+                        populateUI();
+                    }
+
+                }
             }
-        }
 
     });
 }
@@ -513,9 +540,10 @@ function populateCharts() {
         borderColorMemory.push('rgba(255, 206, 86, 1)');
     }
 
+    Invctns();
     exetime();
     memory();
-    Invctns();
+
    
     /*var ctx = document.getElementById("timeChart").getContext('2d');
     ctx.clearRect(0,0,$("#timeChart").width(), $("#timeChart").height() );
@@ -560,36 +588,38 @@ function populateCharts() {
 
     function Invctns(){
         // console.log(datapoints1);
-     $("#timeChart").CanvasJSChart( {
-         //type: 'line',
- 
-         axisY: {
-             title: "Invocations/Duration/Memory"
-         },
-         axisX: {
-                 title: "Elapsed Time"
-         },
-         data: [
-             {
-             type: "column",
-             legendText: "Invocations", //change it to column, spline, line, pie, etc
-             dataPoints: datapoints5
-         },
-          {
-             type: "column",
-             legendText: "Duration (ms)", //change it to column, spline, line, pie, etc
-             dataPoints: datapoints6
-         },
+         //$("#timeChart").CanvasJSChart( {
+         var chart1 = new CanvasJS.Chart("timeChart",{
+             //type: 'line',
+             axisY: {
+                 title: "Invocations/Duration/Memory"
+             },
+             axisX: {
+                     title: "Elapsed Time"
+             },
+             exportEnabled: true,
+             data: [
+                 {
+                 type: "column",
+                 legendText: "Invocations", //change it to column, spline, line, pie, etc
+                 dataPoints: datapoints5
+                 },
+                  {
+                     type: "column",
+                     legendText: "Duration (ms)", //change it to column, spline, line, pie, etc
+                     dataPoints: datapoints6
+                 },
 
-         {
-            type: "column",
-            legendText: "Memory Used (MB)", //change it to column, spline, line, pie, etc
-            dataPoints: datapoints7
-        }
-
-         ]
-     })
- };
+                 {
+                    type: "column",
+                    legendText: "Memory Used (MB)", //change it to column, spline, line, pie, etc
+                    dataPoints: datapoints7
+                }
+             ]
+         })
+        chart1.render();
+        addExportFeature(chart1, "exportCsvBtnContainer2", false);
+    }
 
    /* var ctx = document.getElementById("durchart").getContext('2d');
     ctx.clearRect(0,0,$("#durchart").width(), $("#durchart").height());
@@ -658,7 +688,7 @@ function populateCharts() {
     addExportFeature(chart1, "exportCsvBtnContainer1", false);
  };
 
- function addExportFeature (chart, chartToolBar, addAlways = true){
+ /*function addExportFeature (chart, chartToolBar, addAlways = true){
     var toolBar = document.getElementById(chartToolBar);
     if(chart.get("exportEnabled" ) || addAlways){
         var exportCSV = document.createElement('div');
@@ -677,7 +707,7 @@ function populateCharts() {
     });
         toolBar.appendChild(exportCSV);
   }
-}
+}*/
 
 
 /*else {
@@ -834,7 +864,7 @@ document.body.appendChild(link); // Required for FF
         exportCSV.addEventListener("click", function(){
               downloadCSV({ filename: "chart-data.csv", chart: chart })
         });
-            toolBar.appendChild(exportCSV);
+        toolBar.appendChild(exportCSV);
       }
     }
     
@@ -999,10 +1029,10 @@ function downloadCSV(args) {
                 logGroups[j].selected = isSelected;
             }
         }
-        drawLambdaChart();
+       // drawLambdaChart();
     });
 
-    drawLambdaChart();
+   // drawLambdaChart();
 
 }
 
@@ -1121,8 +1151,7 @@ function populateUI() {
         totalMemSize += Number(logs[key].memorySize);
         totalDuration += Number(logs[key].duration);
         totalBilledDuration += Number(logs[key].billedDuration);
-        $("#dataTable tbody").append(`<tr>
-                       
+        /*$("#dataTable tbody").append(`<tr>
                         <td>${(logs[key].lambdaName.split("/")[3])}</td>
                         <td>${logs[key].RequestId}</td>
                         <td>${startDate.toLocaleString()}</td>
@@ -1132,7 +1161,7 @@ function populateUI() {
                         <td>${logs[key].billedDuration}</td>
                         <td>${logs[key].memorySize}</td>
                         <td>${logs[key].maxMemoryUsed}</td>
-                    </tr>`);
+                    </tr>`);*/
 
 
     }
