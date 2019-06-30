@@ -10,13 +10,117 @@ var mSec = [];
 var byt = [];
 var sStat = ["AR","inv"];
 var stats = ["Average","All","Sum"];
+ipcRenderer.on('init-metricsdata', function(event) {
+            // Metric Drop down change
+            $("#includedLoader").hide();
+            $("#chsrvc").change(function () {
+                $('#metric').empty();
+                $('#metric').append("<option value='none'>Chose a value</option>");
+                for(var i=0; i<metricTypes[$(this).val()].length; i++){
+                    var op = metricTypes[$(this).val()];
+                    $('#metric').append("<option value='"+op[i].val+"'>"+op[i].name+"</option>");
+                }
+            });
 
+            $("#metric").change(function(){
+                console.log($(this).val())
+              if(uCount.indexOf($(this).val()) > -1)
+              {
+                 var mUnit = "Count";
+                 if(sStat.indexOf($(this).val())> -1)
+                 {
+                 stats = [];
+                 stats.push("Sum");
+                 }
+                 for(var i=0; i<stats.length; i++){
+                
+                    $('#stat').append("<option value='"+stats[i]+"'>"+stats[i]+"</option>");
+                }
+                
+              }
+            });
+
+              $("#submitmetrics").click(function()
+              {
+                $("#includedLoader").show();
+                if($('#chsrvc').val() == 'S3')
+                {
+               
+                var params = {
+                    Dimensions: [
+                      {
+                        Name: 'BucketName',
+                        Value: 'praveen' /* required */
+                      },
+
+                      {
+                        Name: 'FilterId',
+                        Value: 'EntireBucket' /* required */
+                      }
+                    ],
+                    MetricName: $('#metrics').val(),
+                    Namespace: 'AWS/S3',
+                    statistics : stats,
+                    unit: 'Count',
+                    startTime:getdate2Timestamp(new Date('01-01-2019 01:00')),
+                    endTime:getdate2Timestamp(new Date('01-04-2019 01:00'))
+                  };
+                  
+                  cw.listMetrics(params, function(err, data) {
+                    $("#includedLoader").hide();
+                    if (err) {
+                      console.log("Error", err);
+                    } else {
+                      console.log("Metrics", JSON.stringify(data.Metrics));
+                    }
+                  });
+
+                }
+
+                else{
+                    $("#includedLoader").show();
+                    var AWS = require('aws-sdk');
+                    //var credentials = {accessKeyId:"accessKeyId", secretAccessKey:'secretAccessKey'};
+                    var credentials = {accessKeyId:"accessKeyId", secretAccessKey:'secretAccessKey'};
+                    var region = "us-east-2"
+                    AWS.config.credentials = credentials;
+                    AWS.config.region = region;
+                    var cw = new AWS.CloudWatch()
+                    
+                   
+
+                    var params = {
+                        Dimensions: [
+                          {
+                            Name: 'FunctionName',
+                            Value: 'LambdaRequest1' /* required */
+                          },
+    
+ 
+                        ],
+                        MetricName: $('#metrics').val(),
+                        Namespace: 'AWS/Lambda',
+                       /* statistics : stats,
+                        unit: 'Count',
+                        startTime:getdate2Timestamp(new Date('01-01-2019 01:00')),
+                        endTime:getdate2Timestamp(new Date('01-04-2019 01:00'))*/
+                      };
+                      
+                      cw.listMetrics(params, function(err, data) {
+                        $("#includedLoader").hide();
+                        if (err) {
+                          console.log("Error", err);
+                        } else {
+                          console.log("Metrics", JSON.stringify(data.Metrics));
+                        }
+                      });
+                }
+
+              });
+})
 ipcRenderer.on('init-data', function (event) {
     // aws lambda input
     console.log("init  data:");
-    $("#metricsBtn").click(function () {
-        ipcRenderer.send("change-page","awsmetrics.html")
-    })
     fs.readFile('data/globalSettings.json', 'utf8', function readFileCallback(err, data){
         if (err){
             console.log(err);
@@ -269,8 +373,12 @@ function getData(lambda ,data) {
                         if(reqs.indexOf(reqId) > -1){
                             logs['invocations'][key]['duration1'] = logs['invocations'][key]['duration1']?logs['invocations'][key]['duration1']:0;
                             logs['invocations'][key]['duration1'] = logs['invocations'][key]['duration1']+Number(duration);
+
                             logs['invocations'][key]['billedDuration1'] = logs['invocations'][key]['billedDuration1']?logs['invocations'][key]['billedDuration1']:0;
                             logs['invocations'][key]['billedDuration1'] = logs['invocations'][key]['billedDuration1']+Number(billedDuration);
+
+
+
 
                             break;
                         }
@@ -292,11 +400,14 @@ function getData(lambda ,data) {
                 }else{
                     if(!dataFound){
                         alert("Data not found!");
+
                     }else{
                         populateUI();
                     }
+
                 }
             }
+
     });
 }
 var timeType = "hour";
@@ -325,6 +436,7 @@ function timestamp2date(unix_timestamp) {
 //new Date("2017-09-15 00:00:00.000")
 function  getdate2Timestamp(input) {
     //alert(new Date().getTime())
+
     var unixTimestamp = input.getTime();//Math.round(input.getTime()/1000);
     console.log(unixTimestamp);
     return unixTimestamp;
@@ -353,24 +465,21 @@ var datapoints7 = [];
 function populateCharts() {
     chartData = [];
 
-    var chartParent = $("#timeChart").parent();
+   /* var chartParent = $("#timeChart").parent();
     $("#timeChart").remove();
-    chartParent.append('<canvas id="timeChart" width="400" height="250"></canvas>');
+    chartParent.append('<canvas id="timeChart" width="400" height="120"></canvas>');*/
 
-    /*var chartParent = $("#lambdaChart").parent();
+    var chartParent = $("#lambdaChart").parent();
     $("#lambdaChart").remove();
-    chartParent.append('<canvas id="lambdaChart" width="400" height="120"></canvas>');*/
+    chartParent.append('<canvas id="lambdaChart" width="400" height="120"></canvas>');
 
-    chartParent = $("#durchart").parent();
+    /*chartParent = $("#durchart").parent();
     $("#durchart").remove();
-    chartParent.append('<canvas id="durchart" width="400" height="250"></canvas>');
+    chartParent.append('<canvas id="durchart" width="400" height="280"></canvas>');*/
 
-    chartParent = $("#memchart").parent();
+    /*chartParent = $("#memchart").parent();
     $("#memchart").remove();
-    chartParent.append('<canvas id="memchart" width="400" height="250"></canvas>');
-
-
-
+    chartParent.append('<canvas id="memchart" width="400" height="120"></canvas>');*/
 
    // function2();
 
@@ -431,22 +540,13 @@ function populateCharts() {
         borderColorMemory.push('rgba(255, 206, 86, 1)');
     }
 
+   // Invctns();
+   // exetime();
+   // memory();
 
    
     var ctx = document.getElementById("timeChart").getContext('2d');
     ctx.clearRect(0,0,$("#timeChart").width(), $("#timeChart").height() );
-
-    var button = document.getElementById('btn-download');
-
-    $('.btn-download').click(function () {
-        const url = document.getElementById($(this).data('target')).toDataURL('image/jpg', 0.8);
-        const base64Data = url.replace(/^data:image\/png;base64,/, "");
-        fs.writeFile($(this).data('target')+'_chart.png', base64Data, 'base64', function (err) {
-            console.log(err);
-        });
-    });
-
-
 
     var myChart = new Chart(ctx, {
         type: 'bar',
@@ -486,10 +586,44 @@ function populateCharts() {
     }
     );
 
+   /* function Invctns(){
+        // console.log(datapoints1);
+         //$("#timeChart").CanvasJSChart( {
+         var chart1 = new CanvasJS.Chart("timeChart",{
+             //type: 'line',
+             axisY: {
+                 title: "Invocations/Duration/Memory"
+             },
+             axisX: {
+                     title: "Elapsed Time"
+             },
+             exportEnabled: true,
+             data: [
+                 {
+                 type: "column",
+                 legendText: "Invocations", //change it to column, spline, line, pie, etc
+                 dataPoints: datapoints5
+                 },
+                  {
+                     type: "column",
+                     legendText: "Duration (ms)", //change it to column, spline, line, pie, etc
+                     dataPoints: datapoints6
+                 },
 
+                 {
+                    type: "column",
+                    legendText: "Memory Used (MB)", //change it to column, spline, line, pie, etc
+                    dataPoints: datapoints7
+                }
+             ]
+         })
+        chart1.render();
+        addExportFeature(chart1, "exportCsvBtnContainer2", false);
+    }*/
 
     var ctx = document.getElementById("durchart").getContext('2d');
     ctx.clearRect(0,0,$("#durchart").width(), $("#durchart").height());
+    alert(ctx);
     var myChart1 = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -519,6 +653,127 @@ function populateCharts() {
             }
         }
     });
+
+    /*function exetime(){
+        // console.log(datapoints1);
+        var chart1 = new CanvasJS.Chart("durchart",{
+         //type: 'line',
+ 
+         axisY: {
+             title: "Duration(ms)"
+         },
+         axisX: {
+                 title: "Elapsed Time"
+         },
+
+         exportEnabled: true,
+         data: [
+             {
+             type: "area",
+             legendText: "Billed Duration(ms)", //change it to column, spline, line, pie, etc
+             dataPoints: datapoints3
+         },
+          {
+             type: "area",
+             legendText: "Duration (ms)", //change it to column, spline, line, pie, etc
+             dataPoints: datapoints4
+         }
+ 
+         ]
+     })
+
+     chart1.render();
+
+    // exporting code
+    addExportFeature(chart1, "exportCsvBtnContainer1", false);
+ };*/
+
+ /*function addExportFeature (chart, chartToolBar, addAlways = true){
+    var toolBar = document.getElementById(chartToolBar);
+    if(chart.get("exportEnabled" ) || addAlways){
+        var exportCSV = document.createElement('div');
+    var text = document.createTextNode("Save as CSV");
+    exportCSV.setAttribute("style", "padding: 12px 8px; background-color: white; color: black")
+    exportCSV.appendChild(text);
+
+    exportCSV.addEventListener("mouseover", function(){
+          exportCSV.setAttribute("style", "padding: 12px 8px; background-color: #2196F3; color: white")
+    });
+    exportCSV.addEventListener("mouseout", function(){
+          exportCSV.setAttribute("style", "padding: 12px 8px; background-color: white; color: black")
+    });
+    exportCSV.addEventListener("click", function(){
+          downloadCSV({ filename: "chart-data.csv", chart: chart })
+    });
+        toolBar.appendChild(exportCSV);
+  }
+}*/
+
+
+/*else {
+var exportCSV = document.createElement('button');	
+var text = document.createTextNode("Save as CSV");	
+exportCSV.appendChild(text);
+exportCSV.addEventListener("click", function(){
+      downloadCSV({ filename: "chart-data.csv", chart: chart })
+});
+document.body.appendChild(exportCSV)
+//}*/
+
+
+function convertChartDataToCSV(args) {  
+var result, ctr, keys, columnDelimiter, lineDelimiter;
+var data = [];
+
+data = args.data || null;
+if (data == null || !data.length) {
+return null;
+}
+
+columnDelimiter = args.columnDelimiter || ',';
+lineDelimiter = args.lineDelimiter || '\n';
+
+keys = Object.keys(data[0]);
+
+result = '';
+result += keys.join(columnDelimiter);
+result += lineDelimiter;
+
+data.forEach(function(item) {
+ctr = 0;
+keys.forEach(function(key) {
+  if (ctr > 0) result += columnDelimiter;
+  result += item[key];
+  ctr++;
+});
+result += lineDelimiter;
+});
+return result;
+}
+function downloadCSV(args) {
+var data, filename, link;
+var csv = "";
+for(var i = 0; i < args.chart.options.data.length; i++){
+  csv += convertChartDataToCSV({
+    data: args.chart.options.data[i].dataPoints
+  });
+}
+if (csv == null) return;
+
+filename = args.filename || 'chart-data.csv';
+
+if (!csv.match(/^data:text\/csv/i)) {
+  csv = 'data:text/csv;charset=utf-8,' + csv;
+}
+
+data = encodeURI(csv);
+link = document.createElement('a');
+link.setAttribute('href', data);
+link.setAttribute('download', filename);
+document.body.appendChild(link); // Required for FF
+  link.click(); 
+  document.body.removeChild(link);   
+}
 
     var ctx = document.getElementById("memchart").getContext('2d');
     ctx.clearRect(0,0,$("#memchart").width(), $("#memchart").height());
@@ -553,6 +808,208 @@ function populateCharts() {
         }
     });
 
+   
+   // var ctx = document.getElementById("memchart").getContext('2d');
+    //ctx.clearRect(0,0,$("#memchart").width(), $("#memchart").height());
+
+   /* function memory(){
+       // console.log(datapoints1);
+   // $("#memchart").CanvasJSChart( {
+        //type: 'line',
+
+        var chart = new CanvasJS.Chart("memchart",{
+        axisY: {
+            title: "Memory (MB)"
+		},
+		axisX: {
+                title: "Elapsed Time"
+        },
+        exportEnabled: true,
+		data: [
+            {
+            type: "area",
+            legendText: "Memory Utilized (MB)", //change it to column, spline, line, pie, etc
+            dataPoints: datapoints1
+        },
+         {
+            type: "line",
+            legendText: "Max Memory Allocated (MB)", //change it to column, spline, line, pie, etc
+            dataPoints: datapoints2
+        }
+
+        ]
+    });
+
+    chart.render();
+
+    // exporting code
+    addExportFeature(chart, "exportCsvBtnContainer", false);
+
+    };*/
+
+    function addExportFeature (chart, chartToolBar, addAlways = true){
+        var toolBar = document.getElementById(chartToolBar);
+        if(chart.get("exportEnabled" ) || addAlways){
+            var exportCSV = document.createElement('div');
+        var text = document.createTextNode("Save as CSV");
+        exportCSV.setAttribute("style", "padding: 12px 8px; background-color: white; color: black")
+        exportCSV.appendChild(text);
+    
+        exportCSV.addEventListener("mouseover", function(){
+              exportCSV.setAttribute("style", "padding: 12px 8px; background-color: #2196F3; color: white")
+        });
+        exportCSV.addEventListener("mouseout", function(){
+              exportCSV.setAttribute("style", "padding: 12px 8px; background-color: white; color: black")
+        });
+        exportCSV.addEventListener("click", function(){
+              downloadCSV({ filename: "chart-data.csv", chart: chart })
+        });
+        toolBar.appendChild(exportCSV);
+      }
+    }
+    
+
+/*else {
+	var exportCSV = document.createElement('button');	
+	var text = document.createTextNode("Save as CSV");	
+  exportCSV.appendChild(text);
+  exportCSV.addEventListener("click", function(){
+      	downloadCSV({ filename: "chart-data.csv", chart: chart })
+  });
+  document.body.appendChild(exportCSV)
+//}*/
+	
+
+function convertChartDataToCSV(args) {  
+  var result, ctr, keys, columnDelimiter, lineDelimiter;
+  var data = [];
+
+  data = args.data || null;
+  if (data == null || !data.length) {
+    return null;
+  }
+
+  columnDelimiter = args.columnDelimiter || ',';
+  lineDelimiter = args.lineDelimiter || '\n';
+
+  keys = Object.keys(data[0]);
+
+  result = '';
+  result += keys.join(columnDelimiter);
+  result += lineDelimiter;
+
+  data.forEach(function(item) {
+    ctr = 0;
+    keys.forEach(function(key) {
+      if (ctr > 0) result += columnDelimiter;
+      result += item[key];
+      ctr++;
+    });
+    result += lineDelimiter;
+  });
+  return result;
+}
+function downloadCSV(args) {
+    var data, filename, link;
+    var csv = "";
+    for(var i = 0; i < args.chart.options.data.length; i++){
+      csv += convertChartDataToCSV({
+        data: args.chart.options.data[i].dataPoints
+      });
+    }
+    if (csv == null) return;
+  
+    filename = args.filename || 'chart-data.csv';
+  
+    if (!csv.match(/^data:text\/csv/i)) {
+      csv = 'data:text/csv;charset=utf-8,' + csv;
+    }
+    
+    data = encodeURI(csv);
+    link = document.createElement('a');
+    link.setAttribute('href', data);
+    link.setAttribute('download', filename);
+    document.body.appendChild(link); // Required for FF
+      link.click(); 
+      document.body.removeChild(link);   
+  }
+
+//convertChartDataToCSV(chart);
+
+//downloadCSV(chart);
+    
+//convertChartDataToCSV();
+//downloadCSV();
+
+   // var ctx = document.getElementById("memchart"); // 
+   // ctx.clearRect(0,0,$("#memchart").width(), $("#memchart").height());
+   
+    
+  /* function function2(){
+   // console.log(datapoints1);
+   $("#memchart").CanvasJSChart( {
+
+        animationEnabled: true,
+        theme: "light2",
+        title:{
+            text: "Memory Util"
+        },
+
+        axisY: {
+            title: "Memory",
+           // valueFormatString: "#0",
+          //  suffix: "K",
+          //  prefix: "£"
+        },
+        legend: {
+            cursor: "pointer",
+           // itemclick: toogleDataSeries
+        },
+        toolTip: {
+            shared: true
+        },
+        data: [ {
+
+            type: "area",
+		    name: "Memory Used",
+		    markerSize: 5,
+		    showInLegend: true,
+		   // xValueFormatString: "MMMM",
+		   // yValueFormatString: "#0",
+           // labels: labels, // ["10AM","11AM"]
+            datapoints : datapoints1},
+                            
+          {
+
+            type: "area",
+            name: "Max Memory",
+            markerSize: 5,
+            showInLegend: true,
+           // xValueFormatString: "MMMM",
+           // yValueFormatString: "#0",
+        // labels: labels, // ["10AM","11AM"]
+        datapoints : datapoints2},
+                    ]
+                
+                })
+            };  */
+                
+    /* $("#memchart").CanvasJSChart(myChart2);
+                           
+                function toogleDataSeries(e) {
+                    if (typeof (e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+                        e.dataSeries.visible = false;
+                    } else {
+                        e.dataSeries.visible = true;
+                    }
+                    e.chart.render();
+                }
+   }*/
+
+
+ 
+    
+    
 
     $('#lambdaListHeader').empty();
     var lambdaOptionsStr = "<select id=\"lambdaList\" class=\"selectpicker\" multiple>";
@@ -572,7 +1029,11 @@ function populateCharts() {
                 logGroups[j].selected = isSelected;
             }
         }
+       // drawLambdaChart();
     });
+
+    drawLambdaChart();
+
 }
 
 var lambdaList = [];

@@ -152,9 +152,9 @@
         <li>
           <a href="#" style="background: none">
             <i class="fa fa-tachometer-alt"></i>
-            <span>AWS Logs</span>
+            <span style="color: white !important;">AWS Logs</span>
           </a>
-          <a href="#" style="background: none">
+          <a href="#" id="metricsBtn" style="background: none">
             <i class="fa fa-tachometer-alt"></i>
             <span>AWS Metrics</span>
           </a>
@@ -336,19 +336,19 @@
 
        <!-- <canvas id="lambdaChart" style="width:100%;height:400px"></canvas>-->
         <span style="display: block; width: 100%; height: 100%; margin-top: 40px;">
-          <span class="chartType" id="Invocations_Duration_Memory">
-          <div id="timeChart" style="width:100%;height:600px"></div>
-          <div id="exportCsvBtnContainer2" class="card-footer" style="text-align: center;"></div>
+          <span class="chartType" id="Invocations_Duration_Memory"  style="border: solid 1px black">
+          <canvas id="timeChart" style="width:100%;height:600px"></canvas>
+            <a href="#" class="btn-download" data-target="timeChart">Download</a>
           </span>
 
-          <span class="chartType" id="Duration_Vs_Billed_Duration">
-            <div id="durchart" style="width:100%;height:600px"></div>
-            <div id="exportCsvBtnContainer1" class="card-footer" style="text-align: center;"></div>
+          <span class="chartType" id="Duration_Vs_Billed_Duration" style="border: solid 1px black">
+            <canvas id="durchart" style="width:100%;height:600px"></canvas>
+            <a href="#" class="btn-download" data-target="durchart">Download</a>
           </span>
 
-          <span class="chartType" id="Memory_Used_Vs_MaxMemory">
-            <div id="memchart" style="width:100%;height:600px"></div>
-            <div id="exportCsvBtnContainer" class="card-footer" style="text-align: center;"></div>
+          <span class="chartType" id="Memory_Used_Vs_MaxMemory" style="border: solid 1px black">
+            <canvas id="memchart" style="width:100%;height:600px"></canvas>
+            <a href="#" class="btn-download" data-target="memchart">Download</a>
           </span>
         </span>
 
@@ -473,44 +473,5 @@
     </div>
   </div>
 
-  <!--- Comparison -->
-
-  <div class="modal" id="testcmp">
-    <div class="modal-dialog">
-      <div class="modal-content">
-
-        <!-- Modal Header -->
-        <div class="modal-header">
-          <h4 class="modal-title">Add AWS Credentials</h4>
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
-
-        <!-- Modal body -->
-        <div class="modal-body">
-          <form>
-            <div class="form-group">
-              <label for="accss">AccessKeyID</label>
-              <input type="text" class="form-control" id="accss">
-            </div>
-            <div class="form-group">
-              <label for="scrt">SecretKeyID</label>
-              <input type="text" class="form-control" id="scrt">
-            </div>
-            <div class="form-group">
-              <label for="rgn">AWS Region</label>
-              <input type="text" class="form-control" id="rgn">
-            </div>
-          </form>
-        </div>
-
-        <!-- Modal footer -->
-        <div class="modal-footer">
-          <button id="saveawsBtn" type="submit" data-dismiss="modal" class="btn btn-success">Save</button>
-          <button type="button" class="btn btn-danger" data-dismiss="modal" title="Close">Close</button>
-        </div>
-
-      </div>
-    </div>
-  </div>
   </body>
 </html>

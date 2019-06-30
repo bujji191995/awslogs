@@ -13,53 +13,43 @@ var fs = require('fs');
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
 var mainWindow;
-var page2load = "home";
+var page2load = "dashboard.html";
 var currGroup;
 
 function createWindow () {
   // Create the browser window.
   mainWindow = new BrowserWindow({width: 800, height: 600})
-
   // and load the index.html of the app.
   mainWindow.loadFile('dashboard.html')
   //mainWindow.loadFile('awsmetrics.html')
-
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
-
   // Emitted when the window is closed.
   mainWindow.on('closed',onMainWindowClose )
   mainWindow.webContents.openDevTools();
-  mainWindow.webContents.on('did-finish-load', () => {
+  mainWindow.webContents.on('did-finish-load', function (){
         console.log("init in main")
-        if(page2load == "home"){
+        if(page2load == "dashboard.html"){
             mainWindow.webContents.send('init-data');
             mainWindow.webContents.send('updatedCredentials',{credentials:credentials,  region:region});
             mainWindow.webContents.send('updatedLogGroupList',logGroups);
             //mainWindow.webContents.send('updatedLogGroup',logGroups);
             loadData();
         }else{
-          mainWindow.webContents.send('init-data',currGroup);
+            mainWindow.webContents.send('updatedCredentials',{credentials:credentials,  region:region});
+             mainWindow.webContents.send('init-data',currGroup);
         }
-
   });
 
-    ipcMain.on('change-page', (event, arg) => {
+    ipcMain.on('change-page', function(event, arg){
         //mainWindow = new BrowserWindow({width: 800, height: 600})
-        currGroup = arg;
-        page2load = "events";
-        mainWindow.loadFile('log-events.html');
-        //mainWindow.on('closed',onMainWindowClose );
-       /* mainWindow.webContents.on('did-finish-load', () => {
-          var lgId = arg.split("_")[0];
-          var streamId = arg.split("_")[1];
-          mainWindow.webContents.send('init-data',{groupName:logGroups[lgId].name, streamName:logGroups[lgId].streams[streamId].name});
-        });*/
+        page2load = arg;
+        mainWindow.loadFile(page2load);
     });
 
     ipcMain.on('goto-home', (event) => {
         //mainWindow = new BrowserWindow({width: 800, height: 600})
-        page2load = "home";
+        page2load = "dashboard.html";
         mainWindow.loadFile('dashboard.html');
         //mainWindow.on('closed',onMainWindowClose );
 });
@@ -67,9 +57,6 @@ function createWindow () {
 
 }
 function onMainWindowClose() {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
     mainWindow = null
 }
 
@@ -79,10 +66,7 @@ function onMainWindowClose() {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', loadStorageData)
-
-
 function loadStorageData() {
-
     fs.readFile('data/globalSettings.json', 'utf8', function readFileCallback(err, data){
         if (err){
             console.log(err);
@@ -101,8 +85,6 @@ function loadStorageData() {
             createWindow();
         });
     });
-
-
 }
 
 
